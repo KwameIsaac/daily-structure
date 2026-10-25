@@ -102,6 +102,31 @@
   .principles li { padding: 6px 0; font-size: 13px; border-bottom: 1px solid color-mix(in srgb, var(--brd) 40%, transparent); }
   .principles li:last-child { border-bottom: none; }
   .principles li::before { content: '→ '; color: var(--acc); font-weight: 700; }
+
+  /* "Now" highlight on schedule */
+  .block.is-now { background: color-mix(in srgb, var(--acc) 10%, transparent); border-radius: 8px; padding-left: 8px; margin: 0 -8px; border-bottom-color: transparent; }
+  .now-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 10px; background: var(--acc); color: #fff; margin-left: 6px; vertical-align: middle; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
+
+  /* Timers */
+  .sub-note { font-size: 12px; color: var(--mfg); margin-bottom: 14px; }
+  .timer-presets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
+  @media (max-width: 480px) { .timer-presets { grid-template-columns: repeat(2, 1fr); } }
+  .preset-btn { border: 1px solid var(--brd); background: var(--bg); color: var(--fg); border-radius: 10px; padding: 10px 6px; font-size: 12px; cursor: pointer; text-align: center; line-height: 1.4; transition: all .15s; }
+  .preset-btn small { color: var(--mfg); font-size: 11px; }
+  .preset-btn:hover { border-color: var(--acc); }
+  .preset-btn:active { transform: scale(.96); }
+  .custom-row { display: flex; gap: 8px; margin-bottom: 16px; }
+  .custom-row input { flex: 1; border: 1px solid var(--brd); border-radius: 8px; padding: 9px 12px; font-size: 13px; background: var(--bg); color: var(--fg); }
+  .custom-btn { border: none; background: var(--acc); color: #fff; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .timer-box { border: 1px solid var(--brd); border-radius: 12px; padding: 24px; text-align: center; background: var(--bg); transition: background .3s; }
+  .timer-box.done { background: color-mix(in srgb, #ef4444 15%, var(--bg)); border-color: #ef4444; }
+  .timer-label { font-size: 13px; color: var(--mfg); margin-bottom: 6px; font-weight: 600; }
+  .timer-clock { font-size: 48px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 1px; margin-bottom: 14px; }
+  .timer-controls { display: flex; gap: 8px; justify-content: center; margin-bottom: 10px; }
+  .timer-controls button { border: 1px solid var(--brd); background: var(--crd); color: var(--fg); border-radius: 8px; padding: 8px 16px; font-size: 13px; cursor: pointer; }
+  .timer-controls button:hover { border-color: var(--acc); }
+  .sound-toggle { font-size: 12px; color: var(--mfg); display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -112,6 +137,7 @@
 
   <div class="tabs">
     <div class="tab active" onclick="showView('schedule')">Schedule</div>
+    <div class="tab" onclick="showView('timers')">Timers</div>
     <div class="tab" onclick="showView('checklist')">Daily Check</div>
     <div class="tab" onclick="showView('weekly')">Weekly View</div>
     <div class="tab" onclick="showView('books')">Reading</div>
@@ -216,6 +242,39 @@
   <div class="block">
     <div class="time">22:15</div>
     <div class="desc">Lights out <span class="tag tag-rest">sleep</span><br><small>Target 8 hrs. You wake at 6:30 — this is the math.</small></div>
+  </div>
+</div>
+
+<!-- TIMERS -->
+<div id="timers" class="view">
+  <h2>Timers</h2>
+  <p class="sub-note">Tap a preset to start, or set a custom time. Sound + vibration + a flashing tab title fire when it ends — works even if you switch apps, as long as this tab stays open.</p>
+
+  <div class="timer-presets" id="timerPresets">
+    <button class="preset-btn" data-min="10" data-label="🧘 Meditation">🧘 Meditation<br><small>10 min</small></button>
+    <button class="preset-btn" data-min="20" data-label="📖 Reading">📖 Reading<br><small>20 min</small></button>
+    <button class="preset-btn" data-min="10" data-label="☕ Break">☕ Break<br><small>10 min</small></button>
+    <button class="preset-btn" data-min="45" data-label="🍽️ Lunch">🍽️ Lunch<br><small>45 min</small></button>
+    <button class="preset-btn" data-min="25" data-label="🚶 Walk">🚶 Walk<br><small>25 min</small></button>
+    <button class="preset-btn" data-min="60" data-label="💪 Gym">💪 Gym<br><small>60 min</small></button>
+    <button class="preset-btn" data-min="60" data-label="🔍 Opportunity Hour">🔍 Opportunity Hr<br><small>60 min</small></button>
+    <button class="preset-btn" data-min="90" data-label="🎮 Gaming">🎮 Gaming<br><small>90 min</small></button>
+  </div>
+
+  <div class="custom-row">
+    <input type="number" id="customMin" placeholder="Custom minutes" min="1" max="300">
+    <button class="custom-btn" onclick="startCustomTimer()">Start</button>
+  </div>
+
+  <div id="timerDisplay" class="timer-box" style="display:none;">
+    <div class="timer-label" id="timerLabel">—</div>
+    <div class="timer-clock" id="timerClock">00:00</div>
+    <div class="timer-controls">
+      <button onclick="pauseResumeTimer()" id="pauseBtn">Pause</button>
+      <button onclick="resetTimer()">Reset</button>
+      <button onclick="stopTimer()">Close</button>
+    </div>
+    <label class="sound-toggle"><input type="checkbox" id="soundToggle" checked> Sound on</label>
   </div>
 </div>
 
@@ -334,6 +393,204 @@ function toggle(li) {
   });
   const done = document.querySelectorAll('.checklist li.done').length;
   document.getElementById('score').textContent = done;
+})();
+
+/* ===== "You are here" highlight on the schedule ===== */
+function highlightNow() {
+  const blocks = Array.from(document.querySelectorAll('#schedule .block'));
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const parsed = blocks.map(b => {
+    const t = b.querySelector('.time');
+    if (!t) return null;
+    const m = t.textContent.trim().match(/^(\d{2}):(\d{2})$/);
+    if (!m) return null;
+    return { el: b, min: parseInt(m[1]) * 60 + parseInt(m[2]) };
+  }).filter(Boolean);
+  blocks.forEach(b => {
+    b.classList.remove('is-now');
+    const badge = b.querySelector('.now-badge');
+    if (badge) badge.remove();
+  });
+  let current = null;
+  for (const p of parsed) {
+    if (p.min <= nowMin) current = p; else break;
+  }
+  if (current) {
+    current.el.classList.add('is-now');
+    const desc = current.el.querySelector('.desc');
+    const badge = document.createElement('span');
+    badge.className = 'now-badge';
+    badge.textContent = 'NOW';
+    desc.insertBefore(badge, desc.firstChild.nextSibling || null);
+    desc.appendChild(badge);
+  }
+}
+highlightNow();
+setInterval(highlightNow, 60000);
+document.querySelector('.tabs .tab').addEventListener('click', () => {
+  setTimeout(() => {
+    const now = document.querySelector('#schedule .block.is-now');
+    if (now) now.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 50);
+});
+
+/* ===== Timers ===== */
+const TIMER_KEY = 'activeTimer';
+let timerInterval = null;
+let audioCtx = null;
+const origTitle = document.title;
+let titleFlashInterval = null;
+
+function beep(times) {
+  if (!document.getElementById('soundToggle').checked) return;
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    let t = audioCtx.currentTime;
+    for (let i = 0; i < times; i++) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.25, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+      osc.start(t); osc.stop(t + 0.35);
+      t += 0.45;
+    }
+  } catch (e) { /* audio not available */ }
+}
+
+function fmt(ms) {
+  const total = Math.max(0, Math.round(ms / 1000));
+  const m = String(Math.floor(total / 60)).padStart(2, '0');
+  const s = String(total % 60).padStart(2, '0');
+  return m + ':' + s;
+}
+
+function saveTimerState(state) {
+  localStorage.setItem(TIMER_KEY, JSON.stringify(state));
+}
+function getTimerState() {
+  try { return JSON.parse(localStorage.getItem(TIMER_KEY) || 'null'); } catch (e) { return null; }
+}
+
+function beginTimer(minutes, label) {
+  const endAt = Date.now() + minutes * 60000;
+  saveTimerState({ endAt, label, totalMs: minutes * 60000, paused: false, remainingMs: null, done: false });
+  document.getElementById('timerDisplay').style.display = 'block';
+  document.getElementById('timerDisplay').classList.remove('done');
+  document.getElementById('timerLabel').textContent = label;
+  document.getElementById('pauseBtn').textContent = 'Pause';
+  runTimerLoop();
+  document.getElementById('timerDisplay').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function runTimerLoop() {
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    const s = getTimerState();
+    if (!s || s.done) { clearInterval(timerInterval); return; }
+    if (s.paused) { return; }
+    const remaining = s.endAt - Date.now();
+    if (remaining <= 0) {
+      s.done = true;
+      saveTimerState(s);
+      onTimerDone(s.label);
+      clearInterval(timerInterval);
+      return;
+    }
+    document.getElementById('timerClock').textContent = fmt(remaining);
+  }, 250);
+}
+
+function onTimerDone(label) {
+  document.getElementById('timerClock').textContent = '00:00';
+  document.getElementById('timerDisplay').classList.add('done');
+  document.getElementById('timerLabel').textContent = label + ' — done!';
+  beep(3);
+  if (navigator.vibrate) navigator.vibrate([300, 150, 300, 150, 300]);
+  if ('Notification' in window && Notification.permission === 'granted') {
+    try { new Notification('⏰ ' + label + ' is done'); } catch (e) {}
+  }
+  let flash = false;
+  clearInterval(titleFlashInterval);
+  titleFlashInterval = setInterval(() => {
+    document.title = flash ? origTitle : '⏰ TIME\'S UP';
+    flash = !flash;
+  }, 1000);
+  document.addEventListener('visibilitychange', stopTitleFlashOnFocus);
+}
+function stopTitleFlashOnFocus() {
+  if (!document.hidden) {
+    clearInterval(titleFlashInterval);
+    document.title = origTitle;
+    document.removeEventListener('visibilitychange', stopTitleFlashOnFocus);
+  }
+}
+
+function pauseResumeTimer() {
+  const s = getTimerState();
+  if (!s || s.done) return;
+  if (!s.paused) {
+    s.remainingMs = s.endAt - Date.now();
+    s.paused = true;
+    document.getElementById('pauseBtn').textContent = 'Resume';
+  } else {
+    s.endAt = Date.now() + s.remainingMs;
+    s.paused = false;
+    document.getElementById('pauseBtn').textContent = 'Pause';
+  }
+  saveTimerState(s);
+}
+
+function resetTimer() {
+  const s = getTimerState();
+  if (!s) return;
+  beginTimer(s.totalMs / 60000, s.label.replace(' — done!', ''));
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+  clearInterval(titleFlashInterval);
+  document.title = origTitle;
+  localStorage.removeItem(TIMER_KEY);
+  document.getElementById('timerDisplay').style.display = 'none';
+}
+
+function startCustomTimer() {
+  const v = parseFloat(document.getElementById('customMin').value);
+  if (!v || v <= 0) return;
+  requestNotifyPermission();
+  beginTimer(v, '⏱ Custom timer');
+}
+
+function requestNotifyPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+document.getElementById('timerPresets').addEventListener('click', (e) => {
+  const btn = e.target.closest('.preset-btn');
+  if (!btn) return;
+  requestNotifyPermission();
+  beginTimer(parseFloat(btn.dataset.min), btn.dataset.label);
+});
+
+// Resume an in-progress timer after page reload
+(function resumeTimerOnLoad() {
+  const s = getTimerState();
+  if (!s) return;
+  document.getElementById('timerDisplay').style.display = 'block';
+  document.getElementById('timerLabel').textContent = s.done ? s.label + ' — done!' : s.label;
+  document.getElementById('pauseBtn').textContent = s.paused ? 'Resume' : 'Pause';
+  if (s.done) {
+    document.getElementById('timerDisplay').classList.add('done');
+    document.getElementById('timerClock').textContent = '00:00';
+  } else {
+    document.getElementById('timerClock').textContent = fmt(s.paused ? s.remainingMs : s.endAt - Date.now());
+    runTimerLoop();
+  }
 })();
 </script>
 
