@@ -3,22 +3,59 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f4f4f7">
 <title>Isaac's Daily Structure</title>
 <style>
   :root {
-    --fg: var(--foreground, #e4e4e7);
-    --mfg: var(--muted-foreground, #a1a1aa);
-    --acc: var(--accent, #3b82f6);
-    --brd: var(--border, #27272a);
-    --crd: var(--card, #18181b);
+    --fg: #1c1c1f;
+    --mfg: #6b6b76;
+    --acc: #2563eb;
+    --brd: #dcdce2;
+    --crd: #ffffff;
+    --bg: #f4f4f7;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { color: var(--fg); line-height: 1.5; max-width: 520px; }
-  
-  .tabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
-  .tab { padding: 6px 14px; border: 1px solid var(--brd); border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--mfg); transition: all .2s; }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fg: #e4e4e7;
+      --mfg: #a1a1aa;
+      --acc: #60a5fa;
+      --brd: #35353c;
+      --crd: #1c1c20;
+      --bg: #0f0f12;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .page {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 24px 18px 60px;
+  }
+  .card {
+    background: var(--crd);
+    border: 1px solid var(--brd);
+    border-radius: 12px;
+    padding: 20px 22px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  }
+  .site-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .site-sub { font-size: 13px; color: var(--mfg); margin-bottom: 18px; }
+
+  .tabs { display: flex; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; }
+  .tab { padding: 8px 16px; border: 1px solid var(--brd); border-radius: 20px; cursor: pointer; font-size: 13px; color: var(--mfg); transition: all .2s; background: var(--crd); -webkit-tap-highlight-color: transparent; }
   .tab:hover { color: var(--fg); border-color: var(--mfg); }
-  .tab.active { color: var(--fg); border-color: var(--acc); background: color-mix(in srgb, var(--acc) 12%, transparent); }
+  .tab.active { color: #fff; border-color: var(--acc); background: var(--acc); font-weight: 600; }
+  @media (max-width: 480px) {
+    .page { padding: 14px 10px 50px; }
+    .card { padding: 16px 14px; border-radius: 10px; }
+    .tab { padding: 8px 12px; font-size: 12.5px; }
+  }
   
   .view { display: none; }
   .view.active { display: block; }
@@ -69,13 +106,19 @@
 </head>
 <body>
 
-<div class="tabs">
-  <div class="tab active" onclick="showView('schedule')">Schedule</div>
-  <div class="tab" onclick="showView('checklist')">Daily Check</div>
-  <div class="tab" onclick="showView('weekly')">Weekly View</div>
-  <div class="tab" onclick="showView('books')">Reading</div>
-  <div class="tab" onclick="showView('rules')">Ground Rules</div>
-</div>
+<div class="page">
+  <div class="site-title">Isaac's Daily Structure</div>
+  <div class="site-sub">Schedule · habits · reading tracker — updated as the system evolves</div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showView('schedule')">Schedule</div>
+    <div class="tab" onclick="showView('checklist')">Daily Check</div>
+    <div class="tab" onclick="showView('weekly')">Weekly View</div>
+    <div class="tab" onclick="showView('books')">Reading</div>
+    <div class="tab" onclick="showView('rules')">Ground Rules</div>
+  </div>
+
+  <div class="card">
 
 <!-- SCHEDULE -->
 <div id="schedule" class="view active">
@@ -254,6 +297,9 @@
     <li><strong>The opportunity hour is sacred.</strong> 19:15–20:15. Business loan research, networking, applications, side project planning. This is where your future lives.</li>
     <li><strong>Imperfect days count.</strong> Hit 5/8 habits? That's a win. Missed the gym? Walk longer. The goal is consistency over months, not perfection today.</li>
   </ul>
+</div>
+
+  </div>
 </div>
 
 <script>
