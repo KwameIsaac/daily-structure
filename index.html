@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Isaac's Daily Structure</title>
+<style>
+  :root {
+    --fg: var(--foreground, #e4e4e7);
+    --mfg: var(--muted-foreground, #a1a1aa);
+    --acc: var(--accent, #3b82f6);
+    --brd: var(--border, #27272a);
+    --crd: var(--card, #18181b);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { color: var(--fg); line-height: 1.5; max-width: 520px; }
+  
+  .tabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tab { padding: 6px 14px; border: 1px solid var(--brd); border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--mfg); transition: all .2s; }
+  .tab:hover { color: var(--fg); border-color: var(--mfg); }
+  .tab.active { color: var(--fg); border-color: var(--acc); background: color-mix(in srgb, var(--acc) 12%, transparent); }
+  
+  .view { display: none; }
+  .view.active { display: block; }
+  
+  h2 { font-size: 15px; font-weight: 600; margin-bottom: 12px; color: var(--fg); }
+  h3 { font-size: 13px; font-weight: 600; margin: 16px 0 8px; color: var(--acc); text-transform: uppercase; letter-spacing: .5px; }
+  
+  .block { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid color-mix(in srgb, var(--brd) 50%, transparent); }
+  .block:last-child { border-bottom: none; }
+  .time { font-size: 12px; color: var(--acc); font-weight: 600; min-width: 58px; padding-top: 1px; font-variant-numeric: tabular-nums; }
+  .desc { font-size: 13px; color: var(--fg); }
+  .desc small { color: var(--mfg); font-size: 12px; }
+  .tag { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 3px; font-weight: 600; margin-left: 6px; vertical-align: middle; }
+  .tag-habit { background: color-mix(in srgb, #22c55e 18%, transparent); color: #4ade80; }
+  .tag-work { background: color-mix(in srgb, var(--acc) 18%, transparent); color: color-mix(in srgb, var(--acc) 80%, white); }
+  .tag-rest { background: color-mix(in srgb, #f59e0b 18%, transparent); color: #fbbf24; }
+  .tag-errand { background: color-mix(in srgb, #a855f7 18%, transparent); color: #c084fc; }
+  
+  .rule { background: color-mix(in srgb, var(--acc) 8%, transparent); border-left: 3px solid var(--acc); padding: 10px 14px; border-radius: 0 6px 6px 0; margin: 12px 0; font-size: 13px; }
+  .rule strong { color: var(--acc); }
+  
+  .checklist { list-style: none; }
+  .checklist li { padding: 6px 0; border-bottom: 1px solid color-mix(in srgb, var(--brd) 40%, transparent); font-size: 13px; display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
+  .checklist li:last-child { border-bottom: none; }
+  .check { width: 18px; height: 18px; border: 2px solid var(--brd); border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all .2s; }
+  .checklist li.done .check { background: var(--acc); border-color: var(--acc); }
+  .checklist li.done .check::after { content: '✓'; color: white; font-size: 12px; font-weight: 700; }
+  .checklist li.done .label { text-decoration: line-through; color: var(--mfg); }
+  
+  .weekly-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 11px; margin-top: 8px; }
+  .day-header { color: var(--mfg); font-weight: 600; padding: 4px; }
+  .day-cell { border: 1px solid var(--brd); border-radius: 4px; padding: 6px 2px; cursor: pointer; transition: all .15s; }
+  .day-cell:hover { border-color: var(--mfg); }
+  .day-cell.gym { border-color: #22c55e; background: color-mix(in srgb, #22c55e 10%, transparent); }
+  .day-cell.errand { border-color: #a855f7; background: color-mix(in srgb, #a855f7 10%, transparent); }
+  
+  .books { display: flex; gap: 12px; margin-top: 8px; }
+  .book { flex: 1; border: 1px solid var(--brd); border-radius: 8px; padding: 12px; }
+  .book-title { font-size: 12px; font-weight: 600; margin-bottom: 6px; }
+  .book-meta { font-size: 11px; color: var(--mfg); }
+  .progress-bar { height: 4px; background: var(--brd); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--acc); border-radius: 2px; transition: width .3s; }
+
+  .principles li { padding: 6px 0; font-size: 13px; border-bottom: 1px solid color-mix(in srgb, var(--brd) 40%, transparent); }
+  .principles li:last-child { border-bottom: none; }
+  .principles li::before { content: '→ '; color: var(--acc); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="tabs">
+  <div class="tab active" onclick="showView('schedule')">Schedule</div>
+  <div class="tab" onclick="showView('checklist')">Daily Check</div>
+  <div class="tab" onclick="showView('weekly')">Weekly View</div>
+  <div class="tab" onclick="showView('books')">Reading</div>
+  <div class="tab" onclick="showView('rules')">Ground Rules</div>
+</div>
+
+<!-- SCHEDULE -->
+<div id="schedule" class="view active">
+  <h2>Weekday Structure</h2>
+  
+  <h3>Morning Power Block</h3>
+  <div class="block">
+    <div class="time">06:30</div>
+    <div class="desc">Wake up, geyser on <span class="tag tag-rest">wind-up</span></div>
+  </div>
+  <div class="block">
+    <div class="time">06:35</div>
+    <div class="desc">Meditate — 10 min, seated, eyes closed <span class="tag tag-habit">habit</span><br><small>Before the phone, before the shower. Non-negotiable.</small></div>
+  </div>
+  <div class="block">
+    <div class="time">06:45</div>
+    <div class="desc">Shower + get ready</div>
+  </div>
+  <div class="block">
+    <div class="time">07:10</div>
+    <div class="desc">Breakfast + Read — 20 min <span class="tag tag-habit">habit</span><br><small>~10 pages. Alternate books daily.</small></div>
+  </div>
+  <div class="block">
+    <div class="time">07:30</div>
+    <div class="desc">Prep for work — review today's tasks, open tools <span class="tag tag-work">work</span></div>
+  </div>
+  
+  <h3>Work Day</h3>
+  <div class="block">
+    <div class="time">08:00</div>
+    <div class="desc">Start work — client responses, task triage <span class="tag tag-work">work</span></div>
+  </div>
+  <div class="block">
+    <div class="time">08:30</div>
+    <div class="desc">Morning meeting with Marisha <span class="tag tag-work">work</span></div>
+  </div>
+  <div class="block">
+    <div class="time">09:00</div>
+    <div class="desc">Deep work block 1 — project execution <span class="tag tag-work">work</span></div>
+  </div>
+  <div class="block">
+    <div class="time">11:00</div>
+    <div class="desc">Break — 10 min walk outside or stretch + water <span class="tag tag-rest">break</span></div>
+  </div>
+  <div class="block">
+    <div class="time">11:10</div>
+    <div class="desc">Deep work block 2 <span class="tag tag-work">work</span></div>
+  </div>
+  <div class="block">
+    <div class="time">13:00</div>
+    <div class="desc">Lunch — cook/eat, step away from desk <span class="tag tag-rest">break</span><br><small>45 min. Eat real food. Not optional.</small></div>
+  </div>
+  <div class="block">
+    <div class="time">13:45</div>
+    <div class="desc">Deep work block 3 <span class="tag tag-work">work</span></div>
+  </div>
+  <div class="block">
+    <div class="time">15:30</div>
+    <div class="desc">Break — 10 min. Water, snack, fresh air <span class="tag tag-rest">break</span></div>
+  </div>
+  <div class="block">
+    <div class="time">15:40</div>
+    <div class="desc">Wrap-up work — finish tasks, respond to messages <span class="tag tag-work">work</span></div>
+  </div>
+  <div class="block">
+    <div class="time">17:00</div>
+    <div class="desc">🛑 Work stops <span class="tag tag-work">work</span><br><small>Close laptop. Walk away. If it's not on fire, it waits until tomorrow.</small></div>
+  </div>
+  
+  <h3>Evening — Your Time</h3>
+  <div class="block">
+    <div class="time">17:00</div>
+    <div class="desc">Walk — 20-30 min outside <span class="tag tag-habit">habit</span><br><small>Transition ritual. Decompresses the work day.</small></div>
+  </div>
+  <div class="block">
+    <div class="time">17:30</div>
+    <div class="desc">Gym (Mon/Wed/Fri) or free time (Tue/Thu) <span class="tag tag-habit">habit</span><br><small>Gym: 45-60 min. Non-gym days: errands, cooking, personal projects.</small></div>
+  </div>
+  <div class="block">
+    <div class="time">18:30</div>
+    <div class="desc">Cook dinner + eat properly <span class="tag tag-rest">self-care</span></div>
+  </div>
+  <div class="block">
+    <div class="time">19:15</div>
+    <div class="desc">Opportunity hour <span class="tag tag-errand">growth</span><br><small>Research business ideas, apply for things, network, bank/admin tasks. The stuff that "never gets done" — it lives here.</small></div>
+  </div>
+  <div class="block">
+    <div class="time">20:15</div>
+    <div class="desc">Gaming — max 1.5 hrs <span class="tag tag-rest">leisure</span><br><small>Set a timer. When it rings, you stop. No negotiating.</small></div>
+  </div>
+  <div class="block">
+    <div class="time">21:45</div>
+    <div class="desc">Wind down — read for 15-20 min <span class="tag tag-habit">habit</span><br><small>No screens. Book only. This replaces the phone scroll.</small></div>
+  </div>
+  <div class="block">
+    <div class="time">22:15</div>
+    <div class="desc">Lights out <span class="tag tag-rest">sleep</span><br><small>Target 8 hrs. You wake at 6:30 — this is the math.</small></div>
+  </div>
+</div>
+
+<!-- DAILY CHECKLIST -->
+<div id="checklist" class="view">
+  <h2>Daily Habits — Tap to Check Off</h2>
+  <p style="font-size:12px;color:var(--mfg);margin-bottom:12px;">Reset each morning. Aim for 6/8 on weekdays.</p>
+  <ul class="checklist" id="habitList">
+    <li onclick="toggle(this)" data-key="med"><div class="check"></div><span class="label">🧘 Meditated (10 min)</span></li>
+    <li onclick="toggle(this)" data-key="read"><div class="check"></div><span class="label">📖 Read (20+ min)</span></li>
+    <li onclick="toggle(this)" data-key="water"><div class="check"></div><span class="label">💧 Drank enough water</span></li>
+    <li onclick="toggle(this)" data-key="lunch"><div class="check"></div><span class="label">🍽️ Ate a proper lunch</span></li>
+    <li onclick="toggle(this)" data-key="walk"><div class="check"></div><span class="label">🚶 Went for a walk</span></li>
+    <li onclick="toggle(this)" data-key="gym"><div class="check"></div><span class="label">💪 Gym (Mon/Wed/Fri)</span></li>
+    <li onclick="toggle(this)" data-key="opp"><div class="check"></div><span class="label">🔍 Opportunity hour</span></li>
+    <li onclick="toggle(this)" data-key="stop"><div class="check"></div><span class="label">🛑 Stopped work by 17:30</span></li>
+  </ul>
+  <div style="margin-top:16px;padding:10px;border:1px solid var(--brd);border-radius:6px;font-size:12px;color:var(--mfg);">
+    Score: <span id="score" style="color:var(--acc);font-weight:700;">0</span>/8 today
+  </div>
+</div>
+
+<!-- WEEKLY VIEW -->
+<div id="weekly" class="view">
+  <h2>Weekly Rhythm</h2>
+  
+  <div style="font-size:13px;margin-bottom:12px;">
+    <div class="block"><div class="time">Mon</div><div class="desc">🏋️ Gym · Opportunity hour · Normal workday</div></div>
+    <div class="block"><div class="time">Tue</div><div class="desc">Errands slot (ID card, bank, groceries) · Normal workday</div></div>
+    <div class="block"><div class="time">Wed</div><div class="desc">🏋️ Gym · Opportunity hour · Normal workday</div></div>
+    <div class="block"><div class="time">Thu</div><div class="desc">Errands overflow / personal projects · Normal workday</div></div>
+    <div class="block"><div class="time">Fri</div><div class="desc">🏋️ Gym · Lighter evening — social or rest</div></div>
+    <div class="block"><div class="time">Sat</div><div class="desc">Morning: errands/chores · Afternoon: free · Evening: gaming/social</div></div>
+    <div class="block"><div class="time">Sun</div><div class="desc">Rest + reset · Longer reading/meditation · Meal prep · Plan the week</div></div>
+  </div>
+
+  <div class="rule">
+    <strong>Errand rule:</strong> Tuesday + Thursday after work are your errand windows. Pick ONE errand per slot. This week: <em>ID card application</em> (Tue), <em>Bank loan meeting</em> (Thu).
+  </div>
+</div>
+
+<!-- BOOKS -->
+<div id="books" class="view">
+  <h2>Reading Tracker</h2>
+  <p style="font-size:12px;color:var(--mfg);margin-bottom:12px;">Alternate daily. ~10 pages at breakfast, ~10 before bed = 20 pages/day per book.</p>
+  
+  <div class="books">
+    <div class="book">
+      <div class="book-title">📕 The Power of Your Subconscious Mind</div>
+      <div class="book-meta">Joseph Murphy</div>
+      <div class="book-meta" style="margin-top:6px;">~300 pages · Reading Mon/Wed/Fri/Sun</div>
+      <div class="book-meta">At 20 pages/session → ~15 sessions → <strong style="color:var(--fg);">~4 weeks</strong></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:5%"></div></div>
+    </div>
+    <div class="book">
+      <div class="book-title">📗 Letting Go</div>
+      <div class="book-meta">David R. Hawkins</div>
+      <div class="book-meta" style="margin-top:6px;">~340 pages · Reading Tue/Thu/Sat</div>
+      <div class="book-meta">At 20 pages/session → ~17 sessions → <strong style="color:var(--fg);">~5 weeks</strong></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:5%"></div></div>
+    </div>
+  </div>
+  
+  <div class="rule" style="margin-top:16px;">
+    <strong>Reading windows:</strong> 07:10 breakfast (10 pages) + 21:45 wind-down (10 pages). If you only hit one, that's still progress.
+  </div>
+</div>
+
+<!-- GROUND RULES -->
+<div id="rules" class="view">
+  <h2>Non-Negotiable Ground Rules</h2>
+  <ul class="principles">
+    <li><strong>Work stops at 17:00.</strong> Staying late is the exception, not the norm. You're freelance — you set the boundary, not the client.</li>
+    <li><strong>Lunch is mandatory.</strong> 13:00, away from the desk. Skipping meals isn't hustle, it's self-sabotage.</li>
+    <li><strong>Meditate before the phone.</strong> 10 minutes. First thing. This is the anchor habit — everything flows from starting the day intentionally.</li>
+    <li><strong>Gaming has a timer.</strong> 1.5 hours max on weekdays. Set an actual alarm. When it rings, you close the game. No "one more round."</li>
+    <li><strong>Phone goes on the charger at 21:45.</strong> The scroll is stealing your sleep, your reading, and your mornings. Replace it with a book.</li>
+    <li><strong>One errand per slot, two slots per week.</strong> Stop trying to "find time" for errands — they have a home now (Tue/Thu evenings).</li>
+    <li><strong>The opportunity hour is sacred.</strong> 19:15–20:15. Business loan research, networking, applications, side project planning. This is where your future lives.</li>
+    <li><strong>Imperfect days count.</strong> Hit 5/8 habits? That's a win. Missed the gym? Walk longer. The goal is consistency over months, not perfection today.</li>
+  </ul>
+</div>
+
+<script>
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function toggle(li) {
+  li.classList.toggle('done');
+  const done = document.querySelectorAll('.checklist li.done').length;
+  document.getElementById('score').textContent = done;
+  // Save state
+  const key = 'habits_' + new Date().toDateString();
+  const states = {};
+  document.querySelectorAll('.checklist li').forEach(l => {
+    states[l.dataset.key] = l.classList.contains('done');
+  });
+  localStorage.setItem(key, JSON.stringify(states));
+}
+
+// Restore today's state
+(function() {
+  const key = 'habits_' + new Date().toDateString();
+  const saved = JSON.parse(localStorage.getItem(key) || '{}');
+  document.querySelectorAll('.checklist li').forEach(li => {
+    if (saved[li.dataset.key]) {
+      li.classList.add('done');
+    }
+  });
+  const done = document.querySelectorAll('.checklist li.done').length;
+  document.getElementById('score').textContent = done;
+})();
+</script>
+
+</body>
+</html>
